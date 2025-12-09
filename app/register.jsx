@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   top: { marginTop: 36, alignItems: "center" },
   title: { fontSize: 26, fontWeight: "700" },
   subtitle: { marginTop: 6, color: "#475569" },
-  form: { width: "90%", marginTop: 26 },
+  form: { width: "90%", marginTop: 26, alignSelf: "center" },
   input: {
     backgroundColor: "#F8FAFC",
     padding: 14,
