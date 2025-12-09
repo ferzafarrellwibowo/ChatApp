@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   getReactNativePersistence,
   initializeAuth,
+  signInWithEmailAndPassword,
   signOut
 } from "firebase/auth";
 
@@ -77,6 +78,7 @@ export {
   storage,
   // AUTH
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut,
   // FIRESTORE
   addDoc,
