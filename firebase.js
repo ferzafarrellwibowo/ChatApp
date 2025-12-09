@@ -3,16 +3,31 @@ import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getReactNativePersistence,
-  initializeAuth
+  initializeAuth,
+  signInWithEmailAndPassword,
+  signOut
 } from "firebase/auth";
 
 import {
+  addDoc,
   collection,
-  getFirestore
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where
 } from "firebase/firestore";
 
 import {
-  getStorage
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytes
 } from "firebase/storage";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -59,8 +74,29 @@ const messagesRef = collection(db, "messages");
 export {
   // MAIN
   auth,
+  db,
+  storage,
   // AUTH
-  createUserWithEmailAndPassword, db,
-  storage
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  // FIRESTORE
+  addDoc,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+  // STORAGE
+  ref,
+  getDownloadURL,
+  uploadBytes,
+  // COLLECTION REFS
+  usersRef,
+  messagesRef
 };
 
