@@ -1,27 +1,28 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import {
-  auth,
-  createUserWithEmailAndPassword,
-  doc,
-  getDocs,
-  query,
-  setDoc,
-  usersRef,
-  where,
+    auth,
+    createUserWithEmailAndPassword,
+    doc,
+    getDocs,
+    query,
+    setDoc,
+    usersRef,
+    where,
 } from "../firebase";
 
 export default function Register() {
@@ -31,6 +32,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const registerUser = async () => {
     if (!username.trim() || !email.trim() || !password.trim()) {
@@ -78,6 +80,7 @@ export default function Register() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <KeyboardAvoidingView
         behavior={Platform.select({ ios: "padding" })}
         style={{ flex: 1, width: "100%" }}
@@ -105,13 +108,18 @@ export default function Register() {
             keyboardType="email-address"
           />
 
-          <TextInput
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              style={styles.passwordInput}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+              <Text style={styles.eyeIcon}>{showPassword ? "○" : "●"}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, loading ? styles.buttonDisabled : null]}
@@ -134,7 +142,12 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", backgroundColor: "#fff" },
+  container: { 
+    flex: 1, 
+    alignItems: "center", 
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   top: { marginTop: 36, alignItems: "center" },
   title: { fontSize: 26, fontWeight: "700" },
   subtitle: { marginTop: 6, color: "#475569" },
@@ -146,6 +159,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     marginBottom: 12,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 14,
+    fontSize: 14,
+  },
+  eyeButton: {
+    padding: 12,
+    marginRight: 4,
+  },
+  eyeIcon: {
+    fontSize: 20,
+    color: "#0ea5a5",
+    fontWeight: "600",
   },
   button: {
     backgroundColor: "#0ea5a5",

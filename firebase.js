@@ -72,30 +72,21 @@ const messagesRef = collection(db, "messages");
 // EXPORT
 // --------------------
 export {
-  // MAIN
-  auth,
-  db,
-  storage,
-  // AUTH
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
   // FIRESTORE
   addDoc,
-  doc,
+  // MAIN
+  auth, collection,
+  // AUTH
+  createUserWithEmailAndPassword, db, doc,
   getDoc,
   getDocs,
-  messagesRef,
+  // STORAGE
+  getDownloadURL, messagesRef,
   onSnapshot,
   orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  usersRef,
-  where,
-  // STORAGE
-  getDownloadURL,
-  ref,
-  uploadBytes
+  query, ref, serverTimestamp,
+  setDoc, signInWithEmailAndPassword,
+  signOut, storage, uploadBytes, usersRef,
+  where
 };
 
