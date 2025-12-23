@@ -1,39 +1,42 @@
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import {
-  addDoc,
-  auth,
-  doc,
-  getDoc,
-  getDownloadURL,
-  messagesRef,
-  onSnapshot,
-  orderBy,
-  query,
-  ref,
-  serverTimestamp,
-  signOut,
-  storage,
-  uploadBytes,
-  usersRef,
+    addDoc,
+    auth,
+    doc,
+    getDoc,
+    getDownloadURL,
+    messagesRef,
+    onSnapshot,
+    orderBy,
+    query,
+    ref,
+    serverTimestamp,
+    signOut,
+    storage,
+    uploadBytes,
+    usersRef,
 } from "../firebase";
 
-import { loadMessages, saveMessages } from "../utils/storage";
+import { clearCredentials, loadMessages, saveMessages } from "../utils/storage";
 
 export default function Chat() {
   const router = useRouter();
@@ -44,6 +47,7 @@ export default function Chat() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
 
   // load username
   useEffect(() => {
@@ -101,7 +105,12 @@ export default function Chat() {
     }
   };
 
+  const showAttachmentMenu = () => {
+    setShowAttachMenu(true);
+  };
+
   const pickImage = async () => {
+    setShowAttachMenu(false);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -128,9 +137,19 @@ export default function Chat() {
     }
   };
 
+  const attachFile = async () => {
+    setShowAttachMenu(false);
+    Alert.alert("Fitur File", "Fitur attach file sedang dalam pengembangan");
+  };
+
   const logout = async () => {
-    await signOut(auth);
-    router.replace("/");
+    try {
+      await clearCredentials(); // Hapus kredensial tersimpan
+      await signOut(auth);
+      router.replace("/");
+    } catch (error) {
+      console.log("Logout error:", error);
+    }
   };
 
   const renderItem = ({ item }) => {
@@ -155,6 +174,7 @@ export default function Chat() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0ea5a5" />
       {/* header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chat Room</Text>
@@ -172,38 +192,84 @@ export default function Chat() {
             ref={flatRef}
             renderItem={renderItem}
             keyExtractor={(i) => i.id}
-            contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
           />
         )}
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.select({ ios: "padding" })}>
-        <View style={styles.inputWrap}>
-          <TouchableOpacity onPress={pickImage}>
-            <Text style={styles.icon}>📷</Text>
-          </TouchableOpacity>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrap}>
+            <TouchableOpacity onPress={showAttachmentMenu} style={styles.iconButton}>
+              <Text style={styles.icon}>+</Text>
+            </TouchableOpacity>
 
-          <TextInput
-            style={styles.input}
-            value={text}
-            placeholder="Tulis pesan..."
-            onChangeText={setText}
-          />
+            <TextInput
+              style={styles.input}
+              value={text}
+              placeholder="Tulis pesan..."
+              placeholderTextColor="#94A3B8"
+              onChangeText={setText}
+            />
 
-          <TouchableOpacity onPress={sendText} disabled={sending}>
-            <Text style={styles.send}>{sending ? "..." : "➤"}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={sendText} 
+              disabled={sending || !text.trim()}
+              style={styles.sendButton}
+            >
+              <Text style={styles.send}>{sending ? "..." : "➤"}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={showAttachMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAttachMenu(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowAttachMenu(false)}
+        >
+          <View style={styles.attachMenu}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={pickImage}
+            >
+              <Text style={styles.menuIcon}>🖼️</Text>
+              <Text style={styles.menuText}>Image Picker</Text>
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={attachFile}
+            >
+              <Text style={styles.menuIcon}>📎</Text>
+              <Text style={styles.menuText}>Attach File</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F1F5F9" },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#F1F5F9",
+  },
 
   header: {
-    height: 70,
+    height: 56,
     backgroundColor: "#0ea5a5",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -213,47 +279,130 @@ const styles = StyleSheet.create({
   headerTitle: { color: "#fff", fontSize: 22, fontWeight: "700" },
   logout: { color: "#fff", fontSize: 16 },
 
-  bubbleRow: { flexDirection: "row", marginBottom: 10 },
+  bubbleRow: { flexDirection: "row", marginBottom: 12, alignItems: "flex-end" },
   left: { justifyContent: "flex-start" },
   right: { justifyContent: "flex-end" },
 
   avatar: {
-    width: 34,
-    height: 34,
-    backgroundColor: "#1e293b",
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    backgroundColor: "#475569",
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
   },
-  avatarText: { color: "#fff", fontWeight: "700" },
+  avatarText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
-  bubble: { maxWidth: "75%", padding: 12, borderRadius: 14 },
-  bubbleMine: { backgroundColor: "#0ea5a5", borderBottomRightRadius: 4 },
-  bubbleOther: { backgroundColor: "#fff", borderBottomLeftRadius: 4 },
+  bubble: { maxWidth: "75%", padding: 12, borderRadius: 16 },
+  bubbleMine: { 
+    backgroundColor: "#0ea5a5", 
+    borderBottomRightRadius: 4,
+  },
+  bubbleOther: { 
+    backgroundColor: "#fff", 
+    borderBottomLeftRadius: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
 
-  sender: { fontSize: 11, fontWeight: "700", marginBottom: 4 },
-  msgText: { fontSize: 15 },
+  sender: { 
+    fontSize: 11, 
+    fontWeight: "700", 
+    marginBottom: 4,
+    opacity: 0.8,
+  },
+  msgText: { 
+    fontSize: 15,
+    lineHeight: 20,
+  },
   msgImage: { width: 200, height: 200, marginTop: 6, borderRadius: 10 },
 
-  inputWrap: {
-    position: "absolute",
-    bottom: 20,
-    left: 16,
-    right: 16,
+  inputContainer: {
     backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 30,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 12,
+    paddingHorizontal: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 8,
+  },
+  inputWrap: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  icon: { fontSize: 24, marginHorizontal: 6 },
+  iconButton: {
+    marginRight: 8,
+    padding: 4,
+  },
+  icon: { fontSize: 24 },
   input: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#F1F5F9",
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 24,
+    fontSize: 15,
+    color: "#1e293b",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  send: { fontSize: 22, marginLeft: 10, color: "#0ea5a5" },
+  sendButton: {
+    marginLeft: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#0ea5a5",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#0ea5a5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  send: { fontSize: 20, color: "#fff", fontWeight: "bold" },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  attachMenu: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: Platform.OS === "ios" ? 30 : 20,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  menuIcon: {
+    fontSize: 28,
+    marginRight: 16,
+  },
+  menuText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#E2E8F0",
+    marginVertical: 8,
+  },
 });

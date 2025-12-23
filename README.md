@@ -2,6 +2,11 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Requirements
+
+- **Expo SDK**: 54.0.0
+- **Expo Go**: 54.0.6 or later
+
 ## Get started
 
 1. Install dependencies
