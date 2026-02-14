@@ -1,20 +1,17 @@
 {
   "expo": {
-    "name": "ChatApp1",
-    "slug": "ChatApp1",
+    "name": "Vibey",
+    "slug": "Vibey",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "chatapp1",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "entryPoint": "./index.js",
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -23,14 +20,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.frzfarrell.ChatApp1"
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-
     "plugins": [
       "expo-router",
       [
