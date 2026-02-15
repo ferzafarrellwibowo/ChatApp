@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -10,13 +9,13 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from "../../context/AuthContext";
 import { auth, doc, getDoc, usersRef } from "../../firebase";
 
 export default function Settings() {
-    const router = useRouter();
+    const { logout } = useAuth();
     const [profile, setProfile] = useState({ username: "", email: "" });
-    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         (async () => {
@@ -33,29 +32,23 @@ export default function Settings() {
             {
                 text: "Logout",
                 style: "destructive",
-                onPress: () => {
-                    (async () => {
+                onPress: async () => {
+                    try {
+                        // Clear firebase keys from AsyncStorage
                         try {
-                            // sign out from firebase
-                            await auth().signOut();
-
-                            // Remove firebase-related persisted keys from AsyncStorage so auth state resets immediately
-                            try {
-                                const keys = await AsyncStorage.getAllKeys();
-                                const firebaseKeys = keys.filter((k) => typeof k === 'string' && k.startsWith('firebase:'));
-                                if (firebaseKeys.length) await AsyncStorage.multiRemove(firebaseKeys);
-                            } catch (e2) {
-                                // non-fatal: continue even if cleanup fails
-                                console.warn('Failed clearing firebase keys from AsyncStorage', e2);
-                            }
-                        } catch (e) {
-                            console.error('Logout failed', e);
-                            Alert.alert('Error', 'Logout gagal. Coba lagi.');
-                            return;
+                            const keys = await AsyncStorage.getAllKeys();
+                            const firebaseKeys = keys.filter((k) => typeof k === 'string' && k.startsWith('firebase:'));
+                            if (firebaseKeys.length) await AsyncStorage.multiRemove(firebaseKeys);
+                        } catch (e2) {
+                            console.warn('Failed clearing firebase keys from AsyncStorage', e2);
                         }
-                        // on success, navigate to root/login
-                        router.replace("/");
-                    })();
+
+                        // Logout: clears rememberMe + signs out + navigates to login
+                        await logout();
+                    } catch (e) {
+                        console.error('Logout failed', e);
+                        Alert.alert('Error', 'Logout gagal. Coba lagi.');
+                    }
                 },
             },
         ]);
@@ -88,8 +81,8 @@ export default function Settings() {
     ];
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-            <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: (insets.bottom || 0) + 88 }]}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <ScrollView contentContainerStyle={styles.scroll}>
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Settings</Text>
@@ -140,7 +133,7 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#0F172A" },
-    scroll: { paddingBottom: 40 },
+    scroll: { paddingBottom: 100 },
     header: {
         paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8,
         flexDirection: "row", justifyContent: "space-between", alignItems: "center",

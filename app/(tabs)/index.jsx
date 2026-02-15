@@ -2,25 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  auth,
-  collection,
-  db,
-  doc,
-  getDoc,
-  onSnapshot,
-  orderBy,
-  query,
-  usersRef,
-  where
+    auth,
+    collection,
+    db,
+    doc,
+    getDoc,
+    onSnapshot,
+    orderBy,
+    query,
+    usersRef,
+    where,
+    setDoc,
+    addDoc,
+    serverTimestamp,
 } from "../../firebase";
 
 export default function HomeChats() {
@@ -28,7 +32,6 @@ export default function HomeChats() {
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState("");
-    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const uid = auth().currentUser?.uid;
@@ -51,6 +54,58 @@ export default function HomeChats() {
 
         return unsub;
     }, []);
+
+    const createDemoChat = async () => {
+        try {
+            const uid = auth().currentUser?.uid;
+            if (!uid) {
+                Alert.alert('Not logged in', 'Please login to create a demo chat.');
+                return;
+            }
+
+            const dummyId = 'demo_user_alice';
+
+            // Ensure demo user exists (merge so it doesn't overwrite)
+            await setDoc(doc(usersRef, dummyId), {
+                username: 'Alice (Demo)',
+                email: 'alice.demo@example.com',
+                avatar: '',
+                createdAt: new Date(),
+                status: "Hi, I'm a demo user",
+            }, { merge: true });
+
+            // Create chat document
+            const chatsRef = collection(db, 'chats');
+            const newChatRef = doc(chatsRef);
+            const chatId = newChatRef.id;
+
+            const mySnap = await getDoc(doc(usersRef, uid));
+            const myName = mySnap.exists() ? mySnap.data().username : 'Me';
+
+            await setDoc(newChatRef, {
+                participants: [uid, dummyId],
+                participantNames: { [uid]: myName, [dummyId]: 'Alice (Demo)' },
+                lastMessage: 'Hello from Alice (Demo)!',
+                lastMessageTime: serverTimestamp(),
+                unread: { [uid]: 0, [dummyId]: 0 },
+            });
+
+            // Add a message to messages collection
+            const messagesRef = collection(db, 'messages');
+            await addDoc(messagesRef, {
+                chatId,
+                from: dummyId,
+                to: uid,
+                text: 'Hello! This is a demo message. Tap to reply.',
+                createdAt: serverTimestamp(),
+            });
+
+            Alert.alert('Demo created', 'A demo chat has been created. Pull to refresh or reopen Chats.');
+        } catch (e) {
+            console.error('createDemoChat error', e);
+            Alert.alert('Error', 'Failed creating demo chat. See console for details.');
+        }
+    };
 
     const openChat = (chat) => {
         const uid = auth().currentUser?.uid;
@@ -102,7 +157,7 @@ export default function HomeChats() {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
@@ -112,6 +167,9 @@ export default function HomeChats() {
                     <Text style={styles.headerTitle}>Vibey</Text>
                 </View>
                 <View style={styles.headerRight}>
+                    <TouchableOpacity onPress={createDemoChat} style={{ marginRight: 12 }}>
+                        <Ionicons name="add-circle-outline" size={22} color="#94A3B8" />
+                    </TouchableOpacity>
                     <Ionicons name="search-outline" size={22} color="#94A3B8" />
                     <Ionicons name="ellipsis-vertical" size={22} color="#94A3B8" />
                 </View>
@@ -135,7 +193,7 @@ export default function HomeChats() {
                     data={chats}
                     renderItem={renderChat}
                     keyExtractor={(i) => i.id}
-                    contentContainerStyle={{ paddingBottom: (insets.bottom || 0) + 88 }}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                 />
             )}
         </SafeAreaView>

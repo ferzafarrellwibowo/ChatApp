@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -14,23 +14,16 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, onAuthStateChanged, signInWithEmailAndPassword } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const router = useRouter();
+    const { login, loading: authLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [checking, setChecking] = useState(true);
-
-    useEffect(() => {
-        const unsub = onAuthStateChanged(auth(), (user) => {
-            if (user) router.replace("/(tabs)");
-            else setChecking(false);
-        });
-        return unsub;
-    }, []);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const loginUser = async () => {
         if (!email.trim() || !password.trim()) {
@@ -39,8 +32,7 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth(), email.trim(), password);
-            router.replace("/(tabs)");
+            await login(email, password, rememberMe);
         } catch (e) {
             console.error('Login error:', e);
             let msg = "Login gagal.";
@@ -54,7 +46,7 @@ export default function Login() {
         setLoading(false);
     };
 
-    if (checking) {
+    if (authLoading) {
         return (
             <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
                 <ActivityIndicator size="large" color="#3B82F6" />
@@ -107,6 +99,20 @@ export default function Login() {
                                 <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={20} color="#94A3B8" style={{ marginLeft: 8 }} />
                             </TouchableOpacity>
                         </View>
+
+                        {/* Remember Me Checkbox */}
+                        <TouchableOpacity
+                            style={styles.rememberRow}
+                            onPress={() => setRememberMe(!rememberMe)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+                                {rememberMe && (
+                                    <Ionicons name="checkmark" size={14} color="#fff" />
+                                )}
+                            </View>
+                            <Text style={styles.rememberText}>Remember Me</Text>
+                        </TouchableOpacity>
 
                         <TouchableOpacity
                             style={[styles.button, loading && styles.buttonDisabled]}
@@ -161,6 +167,31 @@ const styles = StyleSheet.create({
     },
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+    rememberRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 18,
+    },
+    checkbox: {
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: "#475569",
+        backgroundColor: "transparent",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 10,
+    },
+    checkboxActive: {
+        backgroundColor: "#3B82F6",
+        borderColor: "#3B82F6",
+    },
+    rememberText: {
+        color: "#CBD5E1",
+        fontSize: 14,
+        fontWeight: "500",
+    },
     row: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
     footerText: { color: "#94A3B8", fontSize: 14 },
     link: { color: "#3B82F6", fontWeight: "700", fontSize: 14 },

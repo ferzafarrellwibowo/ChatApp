@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     auth,
     collection,
@@ -29,7 +29,6 @@ export default function Contacts() {
     const router = useRouter();
     const [contacts, setContacts] = useState([]);
     const [search, setSearch] = useState("");
-    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         loadContacts();
@@ -123,7 +122,7 @@ export default function Contacts() {
     );
 
         return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Contacts</Text>
             </View>
@@ -156,7 +155,7 @@ export default function Contacts() {
                 <FlatList
                     data={filtered}
                     keyExtractor={(i) => i.id}
-                    contentContainerStyle={{ paddingBottom: (insets.bottom || 0) + 88 }}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                     renderItem={({ item }) => (
                         <TouchableOpacity style={styles.contactRow} onPress={() => startChat(item)}>
                             <View style={styles.avatar}>

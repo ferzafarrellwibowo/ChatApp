@@ -6,12 +6,11 @@ import {
     Text,
     View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, collection, db, onSnapshot, orderBy, query, where } from "../../firebase";
 
 export default function Calls() {
     const [calls, setCalls] = useState([]);
-    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const uid = auth().currentUser?.uid;
@@ -69,7 +68,7 @@ export default function Calls() {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Calls</Text>
             </View>
@@ -85,7 +84,7 @@ export default function Calls() {
                     data={calls}
                     renderItem={renderCall}
                     keyExtractor={(i) => i.id}
-                    contentContainerStyle={{ paddingBottom: (insets.bottom || 0) + 88 }}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                 />
             )}
         </SafeAreaView>
